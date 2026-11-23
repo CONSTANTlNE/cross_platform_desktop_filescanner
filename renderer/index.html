@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>File Finder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toolbar">
+    <button id="btnScan" class="primary">Scan</button>
+    <button id="btnStop" disabled>Stop</button>
+    <button id="btnFolder">Folder…</button>
+    <span id="scope" title="Scan scope">All drives</span>
+    <button id="btnAll" title="Scan all drives" hidden>×</button>
+    <input id="search" type="search" placeholder="Search file names…" autofocus>
+    <div id="chips">
+      <button class="chip" data-ext="doc">doc</button>
+      <button class="chip" data-ext="docx">docx</button>
+      <button class="chip" data-ext="xls">xls</button>
+      <button class="chip" data-ext="xlsx">xlsx</button>
+      <button class="chip" data-ext="pdf">pdf</button>
+    </div>
+  </div>
+
+  <div id="progress" hidden>
+    <div class="bar"><div class="fill"></div></div>
+    <div id="progressText"></div>
+  </div>
+
+  <div id="table">
+    <div id="header" class="row">
+      <div></div>
+      <div class="sortable" data-sort="name">Name</div>
+      <div class="sortable" data-sort="ext">Ext</div>
+      <div class="sortable right" data-sort="size">Size</div>
+      <div class="sortable" data-sort="modified">Modified</div>
+      <div class="sortable" data-sort="folder">Folder</div>
+      <div></div>
+    </div>
+    <div id="viewport">
+      <div id="spacer"><div id="rows"></div></div>
+      <div id="empty" hidden></div>
+    </div>
+  </div>
+
+  <div id="status"></div>
+  <div id="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

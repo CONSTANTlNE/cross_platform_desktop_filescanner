@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-const EVENTS = new Set(['scan:progress', 'scan:inserted', 'scan:done', 'scan:error', 'settings:changed', 'index:progress', 'index:done', 'update:available']);
+const EVENTS = new Set(['scan:progress', 'scan:inserted', 'scan:done', 'scan:error', 'settings:changed', 'index:progress', 'index:done', 'update:available', 'update:progress', 'update:ready']);
 
 contextBridge.exposeInMainWorld('api', {
   // files
@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('api', {
   indexStats: () => ipcRenderer.invoke('index:stats'),
   indexClear: () => ipcRenderer.invoke('index:clear'),
   checkUpdate: () => ipcRenderer.invoke('update:check'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
   openRelease: (url) => ipcRenderer.invoke('update:open', url),
   skipUpdate: (version) => ipcRenderer.invoke('update:skip', version),
   copyText: (text) => ipcRenderer.invoke('clipboard:write', text),

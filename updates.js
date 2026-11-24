@@ -1,6 +1,8 @@
-// "New version available" notification. This is deliberately NOT an auto-updater: it only asks GitHub
-// for the latest public release, compares version numbers and tells the user; the user downloads the
-// installer from the release page themselves. It is the only network access the app makes.
+// Update check + installer. GitHub's latest release is compared with the running version (fetchLatest).
+// Installed Windows builds and Linux AppImages then download the update in the background with
+// electron-updater (differential via .blockmap; sha512 from latest.yml) and offer "Restart and update".
+// Anything else (source runs, missing latest.yml, download errors) falls back to the banner with a
+// Download button that opens the release page. Only github.com / api.github.com are contacted.
 const { app, net, shell, Notification } = require('electron');
 
 const REPO = 'CONSTANTlNE/cross_platform_desktop_filescanner'; // GitHub "owner/name" that publishes the releases
@@ -46,8 +48,63 @@ async function fetchLatest() {
   }
 }
 
+// electron-updater only works from an installed app: NSIS install on Windows or a running AppImage on Linux
+const canAuto = () => app.isPackaged && (process.platform === 'win32' || !!process.env.APPIMAGE);
+
 function createUpdates({ settings, send, tr, isWindowFocused }) {
+  let au = null;
+  let ready = ''; // version already downloaded
+  let busy = false;
+  if (canAuto()) {
+    try {
+      au = require('electron-updater').autoUpdater;
+      au.autoDownload = false;
+      au.autoInstallOnAppQuit = true; // a downloaded update is also installed on a normal quit
+      au.allowPrerelease = false;
+      au.on('download-progress', (p) => send('update:progress', { percent: Math.round(p.percent || 0) }));
+      au.on('update-downloaded', (info) => {
+        ready = info.version;
+        busy = false;
+        send('update:ready', { version: info.version });
+        if (Notification.isSupported() && !isWindowFocused()) {
+          new Notification({ title: tr('update.notifTitle'), body: trf('update.readyBody', { v: info.version }) }).show();
+        }
+      });
+      au.on('error', () => {}); // failures are handled where the promises are awaited
+    } catch {
+      au = null;
+    }
+  }
+
+  // true = download started (progress/ready events follow); false = use the manual-download banner
+  async function startAuto(r) {
+    if (!au) return false;
+    if (ready === r.version) return send('update:ready', { version: ready }) || true;
+    if (busy) return true;
+    busy = true;
+    try {
+      const c = await au.checkForUpdates();
+      if (!c || !c.updateInfo || !isNewer(c.updateInfo.version, app.getVersion())) throw new Error('no update info');
+      send('update:progress', { percent: 0, version: c.updateInfo.version });
+      au.downloadUpdate().catch(() => {
+        busy = false;
+        announce(r, { manual: true }); // download failed: let the user fetch it from the release page
+      });
+      return true;
+    } catch {
+      busy = false;
+      return false;
+    }
+  }
+
   const trf = (k, p) => tr(k).replace(/\{(\w+)\}/g, (m, x) => (p && p[x] != null ? p[x] : m));
+
+  async function handle(r, manual) {
+    const u = settings.get().updates;
+    if (!manual && u.skipVersion === r.version) return;
+    if (await startAuto(r)) return;
+    announce(r, { manual });
+  }
 
   function announce(r, { manual }) {
     const u = settings.get().updates;
@@ -65,7 +122,7 @@ function createUpdates({ settings, send, tr, isWindowFocused }) {
     async checkNow() {
       const r = await fetchLatest();
       if (r.status !== 'error') settings.set({ updates: { lastCheck: Date.now() } });
-      if (r.status === 'available') announce(r, { manual: true });
+      if (r.status === 'available') await handle(r, true);
       return { ...r, current: app.getVersion() };
     },
     // background check: honours the setting, the once-a-day limit and "skip this version"
@@ -74,7 +131,10 @@ function createUpdates({ settings, send, tr, isWindowFocused }) {
       if (!u.check || Date.now() - u.lastCheck < CHECK_EVERY_MS) return;
       const r = await fetchLatest();
       if (r.status !== 'error') settings.set({ updates: { lastCheck: Date.now() } });
-      if (r.status === 'available') announce(r, { manual: false });
+      if (r.status === 'available') await handle(r, false);
+    },
+    install() {
+      if (au && ready) au.quitAndInstall(true, true); // silent install, then start the new version
     },
     openRelease(url) {
       if (typeof url === 'string' && url.startsWith(PAGE_PREFIX)) shell.openExternal(url);

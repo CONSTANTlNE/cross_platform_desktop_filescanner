@@ -281,9 +281,10 @@ ipcMain.handle('folder:open', async (_e, p) => {
   return err ? { ok: false, code: 'open', message: err } : { ok: true };
 });
 
-// ---- new-version notification (notification only, no auto-install; see updates.js) ----
+// ---- update check + background download/install (see updates.js) ----
 const updates = createUpdates({ settings, send, tr, isWindowFocused: () => !!(win && win.isVisible() && win.isFocused()) });
 ipcMain.handle('update:check', () => updates.checkNow());
+ipcMain.handle('update:install', () => { quitting = true; updates.install(); });
 ipcMain.handle('update:open', (_e, url) => updates.openRelease(url));
 ipcMain.handle('update:skip', (_e, version) => updates.skip(version));
 

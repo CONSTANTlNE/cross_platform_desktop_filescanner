@@ -39,7 +39,8 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "File-Scanner-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -51,8 +52,16 @@
       ],
       "category": "Utility",
       "maintainer": "File Scanner <gmta.constantine@gmail.com>",
-      "icon": "build/icon.png"
-    }
+      "icon": "build/icon.png",
+      "artifactName": "File-Scanner-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "CONSTANTlNE",
+        "repo": "cross_platform_desktop_filescanner"
+      }
+    ]
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -60,6 +69,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^13.2.0",
+    "electron-updater": "^6.8.11",
     "mammoth": "^1.13.0",
     "pdfjs-dist": "^6.5.438",
     "word-extractor": "^1.0.4",

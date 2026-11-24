@@ -218,10 +218,14 @@
   "update.none": "No newer version has been published yet.",
   "update.error": "Could not check for updates. Please check your internet connection.",
   "update.availableLine": "Version {v} is available.",
-  "update.how": "New versions are not installed automatically: click Download, then install the new version over the old one. Your data stays.",
+  "update.how": "Installed versions download new releases in the background; click “Restart and update” when it is ready. Your data stays. If the automatic install is not possible, use Download and install the new version over the old one.",
   "update.notifTitle": "Update available",
   "update.notifBody": "Version {v} of File Scanner is available.",
   "chip.images": "images",
   "images.include": "Include photos (jpg, png, gif, bmp, webp)",
-  "images.hint": "Photos are searchable by file name only, never by contents. Images under 20 KB are skipped. Applies to the next scan."
+  "images.hint": "Photos are searchable by file name only, never by contents. Images under 20 KB are skipped. Applies to the next scan.",
+  "update.downloading": "Downloading version {v}… {p}%",
+  "update.ready": "Version {v} is downloaded and ready to install.",
+  "update.restart": "Restart and update",
+  "update.readyBody": "Version {v} is ready. Restart File Scanner to update."
 }

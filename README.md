@@ -42,8 +42,8 @@ If you launch from a terminal that sets `ELECTRON_RUN_AS_NODE` (e.g. the VS Code
 **Linux** — download the `.AppImage`:
 
 ```bash
-chmod +x "File Scanner-1.0.0.AppImage"
-./"File Scanner-1.0.0.AppImage"      # on newer Ubuntu you may need: --no-sandbox
+chmod +x File-Scanner-<version>.AppImage
+./File-Scanner-<version>.AppImage      # on newer Ubuntu you may need: --no-sandbox
 ```
 
 ## Build installers
@@ -69,7 +69,7 @@ git push --follow-tags       # GitHub builds Windows + Linux and creates the Rel
 
 The tag must match the version in `package.json` (the workflow checks this). No secrets are needed; the workflow uses GitHub's built-in token.
 
-The app asks GitHub for the latest release of this repository about once a day (and when you press **Check for updates** on the About page). If a newer version exists it shows a banner with a **Download** button that opens the release page; you install the new version yourself, over the old one — your data stays. You can skip a version or switch the automatic check off in the About page. It is the only network request the app makes, and it sends nothing about you or your files. The repository address is the `REPO` constant in `updates.js`.
+The app asks GitHub for the latest release of this repository about once a day (and when you press **Check for updates** on the About page). If a newer version exists, the installed Windows app and the Linux AppImage download it in the background (only the changed parts) and show a banner with **Restart and update**; your data stays. Other setups (e.g. running from source) get a **Download** button that opens the release page. You can skip a version or switch the check off in the About page. Updates are not code-signed: the download is verified by a hash published in the release. The app only contacts GitHub, and sends nothing about you or your files. The repository address is the `REPO` constant in `updates.js` (and `build.publish` in `package.json`).
 
 ## Where data lives
 

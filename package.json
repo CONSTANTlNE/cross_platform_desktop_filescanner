@@ -1,10 +1,10 @@
 {
-  "name": "file-finder",
+  "name": "file-scanner",
   "version": "1.0.0",
-  "description": "Scan the drive for documents (doc, docx, xls, xlsx, pdf), search them and open them.",
+  "description": "Scan the drive for documents (doc, docx, xls, xlsx, pdf), search them (also inside their contents), preview and manage them.",
   "main": "main.js",
-  "homepage": "https://example.com/file-finder",
-  "author": "File Finder <noreply@example.com>",
+  "homepage": "https://github.com/CONSTANTlNE/cross_platform_desktop_filescanner",
+  "author": "File Scanner <gmta.constantine@gmail.com>",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -12,11 +12,12 @@
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win --publish never",
-    "dist:linux": "electron-builder --linux --publish never"
+    "dist:linux": "electron-builder --linux --publish never",
+    "icons": "node scripts/make-icon.js"
   },
   "build": {
-    "appId": "com.example.filefinder",
-    "productName": "File Finder",
+    "appId": "ews.ge.filescanner",
+    "productName": "File Scanner",
     "directories": {
       "output": "dist"
     },
@@ -24,12 +25,21 @@
       "main.js",
       "preload.js",
       "db.js",
+      "settings.js",
+      "skip-rules.js",
       "scanner-worker.js",
+      "indexer.js",
+      "updates.js",
+      "content-worker.js",
+      "preview-worker.js",
       "renderer/**/*",
+      "locales/**/*",
+      "build/icon.png",
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -37,11 +47,11 @@
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        "AppImage"
       ],
       "category": "Utility",
-      "maintainer": "File Finder <noreply@example.com>"
+      "maintainer": "File Scanner <gmta.constantine@gmail.com>",
+      "icon": "build/icon.png"
     }
   },
   "devDependencies": {
@@ -49,6 +59,14 @@
     "electron-builder": "^26.18.0"
   },
   "dependencies": {
-    "better-sqlite3": "^13.2.0"
+    "better-sqlite3": "^13.2.0",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.5.438",
+    "word-extractor": "^1.0.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CONSTANTlNE/cross_platform_desktop_filescanner.git"
   }
 }

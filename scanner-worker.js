@@ -8,23 +8,17 @@ const EXTS = new Set(['.doc', '.docx', '.xls', '.xlsx', '.pdf']);
 const BATCH_SIZE = 500;
 const PROGRESS_MS = 100;
 
-// Skip rules. Windows paths are compared lowercase with the drive letter stripped.
-const SKIP_NAMES = new Set(
-  isWin
-    ? ['$recycle.bin', 'system volume information', 'node_modules', '.git']
-    : ['node_modules', '.git']
-);
-const SKIP_ABS = new Set(
-  isWin
-    ? ['\\windows', '\\program files', '\\program files (x86)', '\\programdata']
-    : ['/proc', '/sys', '/dev', '/run', '/usr', '/bin', '/sbin', '/lib', '/lib32', '/lib64', '/boot']
-);
+// Skip rules come from the main process (skip-rules.js + user settings).
+// Windows paths are compared lowercase with the drive letter stripped.
+const SKIP_NAMES = new Set(workerData.skip.names);
+const SKIP_ABS = new Set(workerData.skip.abs);
+const SKIP_SUFFIX = workerData.skip.suffix;
 
 function shouldSkip(fullPath, name) {
   if (SKIP_NAMES.has(isWin ? name.toLowerCase() : name)) return true;
   if (isWin) {
     const p = fullPath.toLowerCase().replace(/^[a-z]:/, '');
-    return SKIP_ABS.has(p) || p.endsWith('\\appdata\\local\\temp');
+    return SKIP_ABS.has(p) || SKIP_SUFFIX.some((s) => p.endsWith(s));
   }
   return SKIP_ABS.has(fullPath);
 }

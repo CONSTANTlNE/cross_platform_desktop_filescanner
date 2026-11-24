@@ -1,52 +1,301 @@
 <!doctype html>
-<html lang="en">
+<html lang="ka">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; frame-src file:;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>File Finder</title>
+  <title>File Scanner</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="toolbar">
-    <button id="btnScan" class="primary">Scan</button>
-    <button id="btnStop" disabled>Stop</button>
-    <button id="btnFolder">Folder…</button>
-    <span id="scope" title="Scan scope">All drives</span>
-    <button id="btnAll" title="Scan all drives" hidden>×</button>
-    <input id="search" type="search" placeholder="Search file names…" autofocus>
-    <div id="chips">
-      <button class="chip" data-ext="doc">doc</button>
-      <button class="chip" data-ext="docx">docx</button>
-      <button class="chip" data-ext="xls">xls</button>
-      <button class="chip" data-ext="xlsx">xlsx</button>
-      <button class="chip" data-ext="pdf">pdf</button>
-    </div>
+  <!-- App shell: add a future tab = one nav button + one <section class="tab" data-tab="..."> -->
+  <header id="appbar">
+    <div class="brand" data-i18n-title="app.title"><img src="../build/icon.png" alt="" width="22" height="22"></div>
+    <nav id="tabs">
+      <button class="tab-btn active" data-tab="files" data-i18n="tabs.files"></button>
+      <button class="tab-btn" data-tab="settings" data-i18n="tabs.settings"></button>
+      <button class="tab-btn" data-tab="about" data-i18n="tabs.about"></button>
+    </nav>
+    <button id="btnTheme" class="icon-btn" data-i18n-title="theme.toggle"><svg class="ic ic-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="ic ic-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </header>
+
+  <div id="updateBar" hidden>
+    <span id="updateText"></span>
+    <button id="updateGet" class="primary" data-i18n="update.download"></button>
+    <button id="updateSkip" data-i18n="update.skip"></button>
+    <button id="updateClose" class="icon-btn" aria-label="close">&times;</button>
   </div>
 
-  <div id="progress" hidden>
-    <div class="bar"><div class="fill"></div></div>
-    <div id="progressText"></div>
-  </div>
-
-  <div id="table">
-    <div id="header" class="row">
-      <div></div>
-      <div class="sortable" data-sort="name">Name</div>
-      <div class="sortable" data-sort="ext">Ext</div>
-      <div class="sortable right" data-sort="size">Size</div>
-      <div class="sortable" data-sort="modified">Modified</div>
-      <div class="sortable" data-sort="folder">Folder</div>
-      <div></div>
+  <!-- ===== Files ===== -->
+  <section class="tab active" data-tab="files">
+    <div id="toolbar">
+      <button id="btnScan" class="primary" data-i18n="btn.scan"></button>
+      <button id="btnStop" disabled data-i18n="btn.stop"></button>
+      <button id="btnIndex" data-i18n-title="contents.title" data-i18n="index.btn"></button>
+      <button id="btnFolder" data-i18n="btn.folder"></button>
+      <span id="scope"></span>
+      <button id="btnAll" class="icon-btn" data-i18n-title="scope.reset" hidden>&times;</button>
+      <div class="searchbox"><input id="search" type="search"><i id="searchSpin" hidden></i></div>
+      <div id="searchMode" class="seg">
+        <button data-mode="name" data-i18n="mode.names"></button>
+        <button data-mode="content" data-i18n="mode.contents"></button>
+      </div>
+      <div id="chips">
+        <button class="chip" data-ext="doc">doc</button>
+        <button class="chip" data-ext="docx">docx</button>
+        <button class="chip" data-ext="xls">xls</button>
+        <button class="chip" data-ext="xlsx">xlsx</button>
+        <button class="chip" data-ext="pdf">pdf</button>
+      </div>
+      <button id="btnPreview" class="icon-btn" data-i18n-title="preview.toggle"><svg class="ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <div id="viewSwitch" class="seg">
+        <button data-view="list" data-i18n="view.list"></button>
+        <button data-view="folders" data-i18n="view.folders"></button>
+      </div>
     </div>
-    <div id="viewport">
-      <div id="spacer"><div id="rows"></div></div>
-      <div id="empty" hidden></div>
+
+    <div id="idxNotice" hidden>
+      <span id="idxNoticeText"></span>
+      <button id="idxNoticeIndex" class="primary" data-i18n="notice.index"></button>
+      <button id="idxNoticeShow" data-i18n="notice.show"></button>
+      <button id="idxNoticeCancel" hidden data-i18n="notice.cancel"></button>
+    </div>
+
+    <div id="indexProgress" hidden>
+      <div class="bar"><div class="fill det" id="idxFill"></div></div>
+      <div class="idx-row"><span id="idxText"></span><button id="idxStop" data-i18n="index.stop"></button></div>
+    </div>
+
+    <div id="progress" hidden>
+      <div class="bar"><div class="fill"></div></div>
+      <div id="progressText"></div>
+    </div>
+
+    <div id="selbar" hidden>
+      <span id="selCount"></span>
+      <button id="selTrash" class="danger"></button>
+      <button id="selClear" data-i18n="sel.clear"></button>
+    </div>
+
+    <div id="content">
+      <aside id="tree" hidden>
+        <div class="tree-head"><strong data-i18n="tree.title"></strong></div>
+        <div class="tree-search"><input id="treeSearch" type="search" data-i18n-ph="tree.search"></div>
+        <div id="treeBody"></div>
+      </aside>
+
+      <div id="treeSplit" class="split" hidden></div>
+
+      <div id="table">
+        <div id="header" class="row">
+          <div class="chk"><input type="checkbox" id="selAll" data-i18n-title="sel.all"></div>
+          <div></div>
+          <div class="th sortable" data-sort="name"><span data-i18n="col.name"></span><i class="sort"></i><b class="rs" data-col="name"></b></div>
+          <div class="ci hd" data-i18n-title="cstate.header"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></div>
+          <div class="th sortable" data-sort="ext"><span data-i18n="col.ext"></span><i class="sort"></i><b class="rs" data-col="ext"></b></div>
+          <div class="th sortable right" data-sort="size"><span data-i18n="col.size"></span><i class="sort"></i><b class="rs" data-col="size"></b></div>
+          <div class="th sortable" data-sort="modified"><span data-i18n="col.modified"></span><i class="sort"></i><b class="rs" data-col="modified"></b></div>
+          <div class="th sortable" data-sort="folder"><span id="colFolder" data-i18n="col.folder"></span><i class="sort"></i></div>
+          <div></div>
+        </div>
+        <div id="viewport">
+          <div id="spacer"><div id="rows"></div></div>
+          <div id="empty" hidden></div>
+        </div>
+      </div>
+
+      <div id="pvSplit" class="split" hidden></div>
+      <aside id="preview" hidden>
+        <div id="pvHit" hidden></div>
+        <div class="pv-head">
+          <div class="pv-titles"><div id="pvTitle" class="pv-title"></div><div id="pvSub" class="pv-sub"></div></div>
+          <button id="pvOpen" data-i18n="preview.open" hidden></button>
+          <button id="pvClose" class="icon-btn" data-i18n-title="preview.close">&times;</button>
+        </div>
+        <div id="pvTabs" hidden></div>
+        <div id="pvBody"></div>
+        <div id="pvNote" hidden></div>
+      </aside>
+    </div>
+    <div id="status"></div>
+  </section>
+
+  <!-- ===== Settings ===== -->
+  <section class="tab" data-tab="settings">
+    <div class="settings-layout">
+      <nav id="settingsNav">
+        <button class="active" data-pane="general" data-i18n="sec.general"></button>
+        <button data-pane="scanning" data-i18n="sec.scanning"></button>
+        <button data-pane="schedule" data-i18n="sec.schedule"></button>
+        <button data-pane="contents" data-i18n="sec.contents"></button>
+      </nav>
+      <div id="settingsBody">
+        <div id="savedNote" data-i18n="settings.saved"></div>
+
+        <div class="pane active" data-pane="general">
+          <h2 data-i18n="sec.general"></h2>
+          <div class="card">
+            <div class="field">
+              <label for="setLang" data-i18n="lang.label"></label>
+              <select id="setLang"><option value="ka">ქართული</option><option value="en">English</option></select>
+            </div>
+            <div class="field">
+              <label data-i18n="theme.label"></label>
+              <div id="setTheme" class="seg">
+                <button data-theme="system"><svg class="ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span data-i18n="theme.system"></span></button>
+                <button data-theme="light"><svg class="ic ic-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><span data-i18n="theme.light"></span></button>
+                <button data-theme="dark"><svg class="ic ic-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span data-i18n="theme.dark"></span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="scanning">
+          <h2 data-i18n="sec.scanning"></h2>
+          <div class="card">
+            <h3 data-i18n="skip.title"></h3>
+            <p class="hint" data-i18n="skip.hint"></p>
+            <div id="skipList"></div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="schedule">
+          <h2 data-i18n="sec.schedule"></h2>
+          <div class="card">
+            <h3 data-i18n="schedule.title"></h3>
+            <div id="setSchedule" class="radios">
+              <label><input type="radio" name="sched" value="off"> <span data-i18n="schedule.off"></span></label>
+              <label><input type="radio" name="sched" value="startup"> <span data-i18n="schedule.startup"></span></label>
+              <label><input type="radio" name="sched" value="daily"> <span data-i18n="schedule.daily"></span></label>
+            </div>
+            <div class="field" id="timeField">
+              <label for="setTime" data-i18n="schedule.time"></label>
+              <input type="time" id="setTime">
+            </div>
+            <p class="hint" data-i18n="schedule.hint"></p>
+            <p class="hint" id="schedScope"></p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="tray.title"></h3>
+            <label class="check"><input type="checkbox" id="setTray"> <span data-i18n="tray.enable"></span></label>
+            <p class="hint" data-i18n="tray.hint"></p>
+            <p class="hint" id="trayLinux" data-i18n="tray.linux" hidden></p>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="contents">
+          <h2 data-i18n="sec.contents"></h2>
+          <div class="card">
+            <h3 data-i18n="contents.title"></h3>
+            <p class="hint" data-i18n="contents.hint"></p>
+
+            <div class="cov">
+              <div class="cov-top"><span data-i18n="contents.searchable"></span><b><span id="stOk">0</span> / <span id="stTotal">0</span> <span id="stPct" class="pct"></span></b></div>
+              <div class="bar"><div class="fill det" id="stBar"></div></div>
+            </div>
+
+            <div class="stat-grid">
+              <div><span data-i18n="contents.total"></span><b id="stTotal2">0</b></div>
+              <div><span data-i18n="contents.pending"></span><b id="stPending">0</b></div>
+              <div><span data-i18n="contents.empty"></span><b id="stEmpty">0</b></div>
+              <div class="sub"><span data-i18n="contents.emptyPdf"></span><b id="stEmptyPdf">0</b></div>
+              <div><span data-i18n="contents.error"></span><b id="stError">0</b></div>
+              <div><span data-i18n="contents.tooBig"></span><b id="stTooBig">0</b></div>
+              <div><span data-i18n="contents.volume"></span><b id="stChars">0</b></div>
+              <div><span data-i18n="contents.last"></span><b id="stLast"></b></div>
+            </div>
+
+            <h3 class="sub-h" data-i18n="contents.byType"></h3>
+            <table class="type-table">
+              <thead><tr>
+                <th data-i18n="contents.thType"></th><th data-i18n="contents.thFiles"></th><th data-i18n="contents.thOk"></th>
+                <th data-i18n="contents.thPending"></th><th data-i18n="contents.thEmpty"></th><th data-i18n="contents.thOther"></th>
+              </tr></thead>
+              <tbody id="stByExt"></tbody>
+            </table>
+
+            <div class="field">
+              <label for="setMaxMb" data-i18n="contents.maxMb"></label>
+              <span><select id="setMaxMb"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="250">250</option></select> <span data-i18n="contents.mb"></span></span>
+            </div>
+            <div class="btn-row">
+              <button id="cIndex" class="primary" data-i18n="index.btn"></button>
+              <button id="cClear" class="danger" data-i18n="contents.clear"></button>
+            </div>
+            <p class="hint warn-note" data-i18n="contents.unicode"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== About ===== -->
+  <section class="tab" data-tab="about">
+    <div class="about-page">
+      <div class="about-head">
+        <img src="../build/icon.png" alt="" width="64" height="64">
+        <div>
+          <h1 data-i18n="app.title"></h1>
+          <p class="hint" data-i18n="about.tagline"></p>
+          <div class="kv"><span data-i18n="about.version"></span><b id="aboutVersion"></b></div>
+          <div class="kv"><span data-i18n="about.data"></span><b id="aboutData"></b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="update.title"></h2>
+        <label class="check"><input type="checkbox" id="updAuto"> <span data-i18n="update.auto"></span></label>
+        <div class="btn-row">
+          <button id="updCheck" data-i18n="update.check"></button>
+          <button id="updGet" class="primary" hidden data-i18n="update.download"></button>
+        </div>
+        <p id="updStatus" class="hint"></p>
+        <p class="hint" data-i18n="update.how"></p>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="about.whatTitle"></h2>
+        <p data-i18n="about.what"></p>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="about.howTitle"></h2>
+        <ol class="steps">
+          <li data-i18n="about.s1"></li><li data-i18n="about.s2"></li><li data-i18n="about.s3"></li><li data-i18n="about.s4"></li>
+          <li data-i18n="about.s5"></li><li data-i18n="about.s6"></li><li data-i18n="about.s7"></li><li data-i18n="about.s8"></li>
+        </ol>
+      </div>
+
+      <div class="card limits">
+        <h2 data-i18n="about.limitsTitle"></h2>
+        <ul class="steps">
+          <li data-i18n="about.l1"></li><li data-i18n="about.l2"></li><li data-i18n="about.l3"></li><li data-i18n="about.l4"></li><li data-i18n="about.l5"></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div id="modal" hidden>
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="mTitle">
+      <h3 id="mTitle"></h3>
+      <div id="mName" class="m-name"></div>
+      <div id="mPath" class="m-path"></div>
+      <div id="mInputRow" hidden><input id="mInput" type="text" spellcheck="false" autocomplete="off"><span id="mSuffix"></span></div>
+      <div id="mError" hidden></div>
+      <p id="mBody"></p>
+      <div class="m-btns">
+        <button id="mCancel" data-i18n="btn.cancel"></button>
+        <button id="mOk" class="danger"></button>
+      </div>
     </div>
   </div>
-
-  <div id="status"></div>
+  <div id="ctx" hidden></div>
   <div id="toast" hidden></div>
-  <script src="app.js"></script>
+  <script src="core.js"></script>
+  <script src="files.js"></script>
+  <script src="settings-ui.js"></script>
+  <script src="preview.js"></script>
+  <script src="index-ui.js"></script>
+  <script src="update-ui.js"></script>
 </body>
 </html>

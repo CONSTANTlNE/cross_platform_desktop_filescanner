@@ -5,6 +5,8 @@ const path = require('path');
 
 const isWin = process.platform === 'win32';
 const EXTS = new Set(['.doc', '.docx', '.xls', '.xlsx', '.pdf']);
+const IMG = new Set(workerData.images ? workerData.images.exts.map((e) => '.' + e) : []);
+const IMG_MIN = workerData.images ? workerData.images.minBytes : 0;
 const BATCH_SIZE = 500;
 const PROGRESS_MS = 100;
 
@@ -52,6 +54,7 @@ async function statFile(dir, name) {
   const full = path.join(dir, name);
   try {
     const st = await fs.promises.stat(full);
+    if (IMG.has(path.extname(name).toLowerCase()) && st.size < IMG_MIN) return;
     batch.push({
       path: full,
       name,
@@ -84,7 +87,8 @@ async function walk(roots) {
         if (!shouldSkip(full, e.name)) stack.push(full);
       } else if (e.isFile()) {
         // "~$x.docx" are Office lock files, not real documents
-        if (EXTS.has(path.extname(e.name).toLowerCase()) && !e.name.startsWith('~$')) hits.push(e.name);
+        const x = path.extname(e.name).toLowerCase();
+        if ((EXTS.has(x) || IMG.has(x)) && !e.name.startsWith('~$')) hits.push(e.name);
       }
     }
     if (hits.length) await Promise.all(hits.map((n) => statFile(dir, n)));

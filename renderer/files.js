@@ -31,7 +31,7 @@
   const inFolderView = () => ui().view === 'folders';
 
   function currentQuery() {
-    const q = { search: state.search, exts: [...state.exts], sort: state.sort, dir: state.dir, mode: ui().searchMode };
+    const q = { search: state.search, exts: [...state.exts].flatMap((e) => e.split(',')), sort: state.sort, dir: state.dir, mode: ui().searchMode };
     if (state.cfilter !== 'all') q.cfilter = state.cfilter;
     if (inFolderView() && state.folder) { q.folder = state.folder; q.recursive = true; } // a folder always includes its subfolders
     return q;
@@ -173,7 +173,7 @@
       <div class="chk"><input type="checkbox" data-act="check"${on ? ' checked' : ''}></div>
       <div>${icon}</div>
       <div title="${esc(r.name)}">${esc(r.name)}</div>
-      <div class="ci ci-${r.cstate}" title="${esc(t('cstate.' + r.cstate))}">${CSTATE_ICON[r.cstate] || ''}</div>
+      <div class="ci ci-${r.cstate}" title="${r.cstate === 'na' ? '' : esc(t('cstate.' + r.cstate))}">${CSTATE_ICON[r.cstate] || ''}</div>
       <div>${esc(r.ext)}</div>
       <div class="right">${App.fmtSize(r.size)}</div>
       <div>${App.fmtDate(r.modified_at)}</div>

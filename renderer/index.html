@@ -2,7 +2,7 @@
 <html lang="ka">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; frame-src file:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: file:; font-src 'self'; frame-src file:;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>File Scanner</title>
   <link rel="stylesheet" href="styles.css">
@@ -46,6 +46,7 @@
         <button class="chip" data-ext="xls">xls</button>
         <button class="chip" data-ext="xlsx">xlsx</button>
         <button class="chip" data-ext="pdf">pdf</button>
+        <button class="chip" data-ext="jpg,jpeg,png,gif,bmp,webp" data-i18n="chip.images"></button>
       </div>
       <button id="btnPreview" class="icon-btn" data-i18n-title="preview.toggle"><svg class="ic" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <div id="viewSwitch" class="seg">
@@ -156,6 +157,10 @@
             <h3 data-i18n="skip.title"></h3>
             <p class="hint" data-i18n="skip.hint"></p>
             <div id="skipList"></div>
+          </div>
+          <div class="card">
+            <label class="check"><input type="checkbox" id="setImages"> <span data-i18n="images.include"></span></label>
+            <p class="hint" data-i18n="images.hint"></p>
           </div>
         </div>
 

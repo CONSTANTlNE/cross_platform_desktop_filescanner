@@ -220,5 +220,8 @@
   "update.availableLine": "Version {v} is available.",
   "update.how": "New versions are not installed automatically: click Download, then install the new version over the old one. Your data stays.",
   "update.notifTitle": "Update available",
-  "update.notifBody": "Version {v} of File Scanner is available."
+  "update.notifBody": "Version {v} of File Scanner is available.",
+  "chip.images": "images",
+  "images.include": "Include photos (jpg, png, gif, bmp, webp)",
+  "images.hint": "Photos are searchable by file name only, never by contents. Images under 20 KB are skipped. Applies to the next scan."
 }

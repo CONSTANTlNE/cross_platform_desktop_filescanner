@@ -18,3 +18,6 @@ Defined in `skip-rules.js` as groups; groups the user ticked in Settings (`scan.
 `{type:'batch', files}` (≥500), `{type:'progress', found, folder}` (throttled 100ms), `{type:'done', stopped, found}`, `{type:'error', message}`.
 Main → worker: `'stop'` (sets a flag checked per directory; remaining batch is flushed, then `done` with `stopped:true`).
 The worker closes `parentPort` after `done` so the thread exits.
+
+## Images (photos)
+`workerData.images = {exts, minBytes}` (from `skip-rules.js` `IMAGE_EXTS`, 20 KB floor) is passed only when the `scan.images` setting is on. Images are name-search only: `db.js` `CSTATE` = `na` for them and they are excluded from the content-index pending set, stats and status filters.

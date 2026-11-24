@@ -260,3 +260,9 @@ button.ctx-item.danger:hover:not(:disabled), button.ctx-item.danger:focus-visibl
 .kv b { font-weight: 500; word-break: break-all; }
 #savedNote { position: fixed; top: 54px; right: 24px; background: #15803d; color: #fff; padding: 4px 12px; border-radius: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 #savedNote.show { opacity: 1; }
+
+.badge.jpg, .badge.jpeg, .badge.png, .badge.gif, .badge.bmp, .badge.webp { background: #9333ea; }
+.pv-img { display: block; max-width: 100%; max-height: 100%; margin: 0 auto; object-fit: contain; }
+#btnPreview { color: #f59e0b; border-color: #f59e0b66; }
+#btnPreview:hover { background: #f59e0b22; }
+#btnPreview.on { background: #f59e0b; border-color: #f59e0b; color: #fff; }

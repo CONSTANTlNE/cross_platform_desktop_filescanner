@@ -5,7 +5,7 @@ const os = require('os');
 const path = require('path');
 const db = require('./db');
 const settings = require('./settings');
-const { GROUPS, buildSkip } = require('./skip-rules');
+const { GROUPS, buildSkip, IMAGE_EXTS, IMAGE_MIN_BYTES } = require('./skip-rules');
 const { createIndexer } = require('./indexer');
 const { createUpdates } = require('./updates');
 
@@ -107,7 +107,7 @@ async function startScan({ mode, folder } = {}) {
   if (!roots.length) return { ok: false, code: 'nothing' };
 
   const skip = buildSkip(settings.get().scan.include);
-  const worker = new Worker(path.join(__dirname, 'scanner-worker.js'), { workerData: { roots, skip } });
+  const worker = new Worker(path.join(__dirname, 'scanner-worker.js'), { workerData: { roots, skip, images: settings.get().scan.images ? { exts: IMAGE_EXTS, minBytes: IMAGE_MIN_BYTES } : null } });
   const s = (scan = { worker, roots, start: Date.now(), found: 0, stopped: false });
   let finished = false;
   updateTray();
@@ -228,7 +228,7 @@ ipcMain.handle('file:showInFolder', async (_e, p) => {
 });
 
 // ---- quick view: parse one document in an isolated worker (size cap, timeout, memory limit) ----
-const PREVIEW_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'pdf'];
+const PREVIEW_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'pdf', ...IMAGE_EXTS];
 const PREVIEW_MAX_BYTES = 30 * 1024 * 1024;
 let previewJob = null; // { worker, cancel }
 
@@ -242,6 +242,7 @@ ipcMain.handle('preview:get', async (_e, p) => {
   } catch {
     return { ok: false, code: 'missing' };
   }
+  if (IMAGE_EXTS.includes(ext)) return { ok: true, kind: 'image' }; // shown by <img src=file://> in the sandboxed renderer
   if (ext === 'pdf') return { ok: true, kind: 'pdf' }; // rendered by Chromium's built-in viewer in an iframe
   if (st.size > PREVIEW_MAX_BYTES) return { ok: false, code: 'tooBig', size: st.size };
 

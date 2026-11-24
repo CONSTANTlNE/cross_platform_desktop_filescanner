@@ -38,4 +38,8 @@ function buildSkip(include = {}) {
   return out;
 }
 
-module.exports = { GROUPS, ALL_IDS, buildSkip };
+// Photos are found by file name only (never content-indexed). Tiny images are almost always UI assets, so they are skipped.
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+const IMAGE_MIN_BYTES = 20 * 1024;
+
+module.exports = { GROUPS, ALL_IDS, buildSkip, IMAGE_EXTS, IMAGE_MIN_BYTES };

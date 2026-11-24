@@ -16,3 +16,6 @@ Eye button in the Files toolbar toggles a right-hand panel (`settings.ui.preview
 - Parsing happens in `preview-worker.js` (worker thread): 15 s timeout, 768 MB heap, terminated afterwards; only the latest request is kept.
 - The renderer never inserts raw document HTML: `preview.js` rebuilds it from an allow-list of tags (links removed, only `data:image/png|jpeg|gif|bmp|webp` images, no styles/scripts). Sheets/text are built with `textContent`.
 - On the narrow layout (panel open) the table drops the Folder column and the Name column flexes.
+
+## Images
+Image files preview as an `<img src="file://...">` (`kind: 'image'` from `preview:get`; CSP `img-src` allows `file:`). No parsing worker involved.

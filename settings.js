@@ -7,6 +7,7 @@ const DEFAULTS = {
   language: 'ka', // 'ka' | 'en'
   theme: 'system', // 'system' | 'light' | 'dark'
   scan: {
+    images: true, // also list photos (jpg png gif bmp webp); name search only, never content-indexed
     scope: { mode: 'all', folder: null }, // used by the scheduler and the tray
     include: Object.fromEntries(ALL_IDS.map((id) => [id, false])), // true = scan this skip group
   },

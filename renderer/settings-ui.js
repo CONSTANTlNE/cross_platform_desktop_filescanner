@@ -57,10 +57,13 @@
   });
   $('setTray').addEventListener('change', (e) => save({ tray: { enabled: e.target.checked } }));
 
+  $('setImages').addEventListener('change', (e) => save({ scan: { images: e.target.checked } }));
+
   function showValues() {
     const st = s();
     $('setLang').value = st.language;
     document.querySelectorAll('#setTheme button').forEach((b) => b.classList.toggle('on', b.dataset.theme === st.theme));
+    $('setImages').checked = !!st.scan.images;
     document.querySelectorAll('#skipList input').forEach((cb) => (cb.checked = !!st.scan.include[cb.dataset.id]));
     document.querySelectorAll('input[name=sched]').forEach((r) => (r.checked = r.value === st.schedule.mode));
     $('setTime').value = st.schedule.time;

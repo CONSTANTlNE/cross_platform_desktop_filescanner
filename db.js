@@ -107,7 +107,9 @@ function escLike(s) {
 }
 
 // content-index state of a file as seen right now: a changed file counts as 'pending' again
-const CSTATE = `CASE WHEN s.file_id IS NULL OR s.mtime <> f.modified_at OR s.size <> f.size THEN 'pending' ELSE s.state END`;
+const { IMAGE_EXTS } = require('./skip-rules');
+const IMG_SQL = IMAGE_EXTS.map((e) => `'${e}'`).join(',');
+const CSTATE = `CASE WHEN f.ext IN (${IMG_SQL}) THEN 'na' WHEN s.file_id IS NULL OR s.mtime <> f.modified_at OR s.size <> f.size THEN 'pending' ELSE s.state END`;
 
 function buildWhere({ search, exts, folder, recursive, mode, cfilter } = {}) {
   const where = [];
@@ -127,6 +129,7 @@ function buildWhere({ search, exts, folder, recursive, mode, cfilter } = {}) {
     }
   }
   if (cfilter) {
+    where.push(`f.ext NOT IN (${IMG_SQL})`);
     const fresh = 's2.file_id = f.id AND s2.mtime = f.modified_at AND s2.size = f.size';
     if (cfilter === 'pending') where.push(`NOT EXISTS (SELECT 1 FROM content_status s2 WHERE ${fresh})`);
     else if (cfilter === 'notok') where.push(`NOT EXISTS (SELECT 1 FROM content_status s2 WHERE ${fresh} AND s2.state = 'ok')`);
@@ -189,7 +192,7 @@ function query(q) {
 }
 
 // ---------- content index ----------
-const PENDING = `(s.file_id IS NULL OR s.mtime <> f.modified_at OR s.size <> f.size OR (s.state = 'toobig' AND f.size <= @max))`;
+const PENDING = `(f.ext NOT IN (${IMG_SQL}) AND (s.file_id IS NULL OR s.mtime <> f.modified_at OR s.size <> f.size OR (s.state = 'toobig' AND f.size <= @max)))`;
 
 const pendingCount = (maxBytes) =>
   db.prepare(`SELECT COUNT(*) AS n FROM files f LEFT JOIN content_status s ON s.file_id = f.id WHERE ${PENDING}`).get({ max: maxBytes }).n;
@@ -232,7 +235,7 @@ function contentStats(maxBytes) {
       `SELECT ext, COUNT(*) AS total, SUM(c = 'ok') AS ok, SUM(c = 'pending') AS pending, SUM(c = 'empty') AS empty,
               SUM(c = 'error') AS error, SUM(c = 'toobig') AS tooBig
        FROM (SELECT f.ext AS ext, ${CSTATE} AS c FROM files f LEFT JOIN content_status s ON s.file_id = f.id)
-       GROUP BY ext ORDER BY ext`
+       WHERE ext NOT IN (${IMG_SQL}) GROUP BY ext ORDER BY ext`
     )
     .all();
   const emptyPdf = db
@@ -240,7 +243,7 @@ function contentStats(maxBytes) {
     .get().n;
   const agg = db.prepare('SELECT COALESCE(SUM(chars), 0) AS chars, MAX(indexed_at) AS last FROM content_status').get();
   return {
-    total: total(), ok: by.ok || 0, pending: by.pending || 0, empty: by.empty || 0, emptyPdf, error: by.error || 0, tooBig: by.toobig || 0,
+    total: total() - (by.na || 0), ok: by.ok || 0, pending: by.pending || 0, empty: by.empty || 0, emptyPdf, error: by.error || 0, tooBig: by.toobig || 0,
     chars: agg.chars, lastIndexedAt: agg.last || 0, byExt,
     toIndex: pendingCount(maxBytes), // what "Index contents" would process now (includes files that are no longer too big)
   };

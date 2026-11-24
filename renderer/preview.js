@@ -110,6 +110,15 @@
 
   function render(res) {
     el.body.classList.toggle('flush', !!(res.ok && res.kind === 'pdf'));
+    if (res.ok && res.kind === 'image') {
+      const img = document.createElement('img');
+      img.className = 'pv-img';
+      img.alt = '';
+      img.src = fileUrl(row.path);
+      el.tabs.hidden = true;
+      el.body.replaceChildren(img);
+      return note('');
+    }
     if (res.ok && res.kind === 'pdf') {
       const f = document.createElement('iframe');
       f.className = 'pv-pdf';
